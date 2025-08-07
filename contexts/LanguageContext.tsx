@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-type Language = "az" | "ru"
+type Language = "az" | "ru";
 
 interface LanguageContextType {
-  language: Language
-  setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
 }
 
 const translations = {
@@ -26,6 +26,7 @@ const translations = {
     "all-categories": "Bütün kateqoriyalar",
     "all-colors": "Bütün rənglər",
     "related-products": "Əlaqəli məhsullar",
+    "category-description": "Müxtəlif kateqoriyalarda premium qapılar",
     specifications: "Spesifikasiyalar",
     variants: "Variantlar",
     price: "Qiymət",
@@ -59,6 +60,7 @@ const translations = {
     "all-categories": "Все категории",
     "all-colors": "Все цвета",
     "related-products": "Связанные продукты",
+    "category-description": "Разнообразные категории премиум дверей",
     specifications: "Характеристики",
     variants: "Варианты",
     price: "Цена",
@@ -77,24 +79,41 @@ const translations = {
     of: "из",
     views: "просмотров",
   },
-}
+};
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("az")
+  const [language, setLanguageState] = useState<Language>("az");
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem("lang") as Language | null;
+    if (storedLang === "az" || storedLang === "ru") {
+      setLanguageState(storedLang);
+    }
+  }, []);
+
+  // Save to localStorage on change
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem("lang", lang);
+  };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)["az"]] || key
-  }
+    return translations[language][key as keyof typeof translations["az"]] || key;
+  };
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext)
+  const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider")
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
-  return context
+  return context;
 }
