@@ -1,20 +1,16 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
-import { useLanguage } from "@/contexts/LanguageContext"
 import { DoorCategory } from "@/lib/api"
+import CategoryHeader from "./home/CategoryHeader"
+import CategoryViewAllButton from "./home/ViewAllButton"
 
 export default function CategoryGrid({ categories }: { categories?: DoorCategory[] }) {
-  const { t } = useLanguage()
 
   if (!categories) {
     return (
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">{t("product-categories")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <Card key={i} className="animate-pulse min-h-[350px] flex flex-col">
@@ -34,11 +30,7 @@ export default function CategoryGrid({ categories }: { categories?: DoorCategory
   return (
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{t("product-categories")}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">{t("category-description")}</p>
-        </div>
-
+        <CategoryHeader />
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 min-[500px]:gap-6 gap-2">
           {categories.map((category) => (
             <Link key={category.id} href={`/products?category=${category.slug}`}>
@@ -62,14 +54,7 @@ export default function CategoryGrid({ categories }: { categories?: DoorCategory
             </Link>
           ))}
         </div>
-
-        <div className="text-center mt-12">
-          <Link href="/products">
-            <Button size="lg" variant="outline">
-              {t("view-all")}
-            </Button>
-          </Link>
-        </div>
+        <CategoryViewAllButton url="/products" />
       </div>
     </section>
   )

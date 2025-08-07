@@ -1,39 +1,16 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
-import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Calendar, Eye, ArrowLeft } from "lucide-react"
-import { useLanguage } from "@/contexts/LanguageContext"
+import { Calendar, Eye } from "lucide-react"
 import { fetchBlogDetail, type Blog } from "@/lib/api"
 import "./sytle.css"
+import Loading from "@/components/blog/Loading"
+import { BackToAllBlogs } from "@/components/blog/BacktoAllBlogs"
+import P from "@/components/home/p"
 
-export default function BlogDetailPage() {
-  const { t } = useLanguage()
-  const params = useParams()
-  const [blog, setBlog] = useState<Blog | null>(null)
-  const [loading, setLoading] = useState(true)
+export default async function BlogDetailPage({params}: { params: { slug: string } }) {
+  const { slug } = params
+  const blog = await fetchBlogDetail(slug)
 
-  useEffect(() => {
-    const loadBlog = async () => {
-      if (!params.slug) return
-
-      try {
-        const data = await fetchBlogDetail(params.slug as string)
-        setBlog(data)
-      } catch (error) {
-        console.error("Error loading blog:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadBlog()
-  }, [params.slug])
-
-  if (loading) {
+  if (!blog) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -52,29 +29,14 @@ export default function BlogDetailPage() {
   }
 
   if (!blog) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t("error")}</h1>
-          <p className="text-gray-600 mb-4">Bloq tapılmadı</p>
-          <Link href="/blogs">
-            <Button>{t("blogs")}</Button>
-          </Link>
-        </div>
-      </div>
-    )
+    return <Loading />
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <Link href="/blogs" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {t("blogs")}
-        </Link>
+        <BackToAllBlogs />
 
-        {/* Blog Header */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
           <div className="aspect-video overflow-hidden">
             <Image
@@ -95,28 +57,18 @@ export default function BlogDetailPage() {
                 day: "numeric",
               })}
               <Eye className="h-4 w-4 ml-6 mr-2" />
-              {blog.views} {t("views")}
+              {blog.views} <P text="views" className="px-1" />
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{blog.title}</h1>
           </div>
         </div>
 
-        {/* Blog Content */}
         <div className="bg-white rounded-lg shadow-sm p-8 ">
           <div
             className="blog"
             dangerouslySetInnerHTML={{ __html: blog.content }}
           />
-        </div>
-
-        {/* Back to Blogs */}
-        <div className="text-center mt-12">
-          <Link href="/blogs">
-            <Button size="lg" variant="outline">
-              {t("blogs")} səhifəsinə qayıt
-            </Button>
-          </Link>
         </div>
       </div>
     </div>
