@@ -1,20 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Heart } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, ShoppingCart } from "lucide-react"
 import { BASE_URL } from "@/lib/api"
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Pagination } from 'swiper/modules'
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules'
 import type { Swiper as SwiperType } from 'swiper'
 
 // Import Swiper styles
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
+import 'swiper/css/effect-fade'
 
 interface ColorVariant {
   id: number
@@ -49,29 +50,29 @@ interface ProductCardProps {
 export default function ProductCard({ door }: ProductCardProps) {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0)
   const [swiper, setSwiper] = useState<SwiperType | null>(null)
-  const [isLiked, setIsLiked] = useState(false)
+
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   const selectedVariant = door.variants[selectedVariantIndex] || door.variants[0]
   
-  // Get all images for the selected variant
   const getVariantImages = () => {
     if (!selectedVariant) return [door.main_image || "/placeholder.svg"]
     
     const images = []
     
-    // Add main image if exists
     if (selectedVariant.main_image) {
       images.push(selectedVariant.main_image)
     }
     
-    // Add variant images
     selectedVariant.images?.forEach(img => {
       if (img.image && img.image !== selectedVariant.main_image) {
         images.push(img.image)
       }
     })
     
-    // Fallback to door main image if no images found
     if (images.length === 0 && door.main_image) {
       images.push(door.main_image)
     }
@@ -83,26 +84,59 @@ export default function ProductCard({ door }: ProductCardProps) {
 
   const handleColorSelect = (variantIndex: number) => {
     setSelectedVariantIndex(variantIndex)
-    // Reset swiper to first slide when changing color
+    setCurrentSlide(0)
+    setImageLoaded(false)
     if (swiper) {
       swiper.slideTo(0)
     }
   }
 
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('Quick view for:', door.name)
+  }
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('Add to cart:', door.name, selectedVariant)
+  }
+
   useEffect(() => {
-    // Reset swiper when variant changes
     if (swiper) {
       swiper.slideTo(0)
+      setCurrentSlide(0)
     }
   }, [selectedVariantIndex, swiper])
 
+  const formatPrice = (price: string) => {
+    const numPrice = parseFloat(price)
+    return numPrice.toLocaleString('en-US', { 
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 2 
+    })
+  }
+
   return (
-    <Card className="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 bg-white rounded-xl overflow-hidden border-0">
-      {/* Image Section with Swiper */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
+    <Card 
+      ref={cardRef}
+      className="group relative overflow-hidden bg-white rounded-2xl border-0 shadow-sm hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-1 will-change-transform"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10" />
+
+      <div className="relative min-[390px]:aspect-[7/7] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 max-[390px]:min-h-[250px]">
+        {!imageLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        
         <Swiper
           onSwiper={setSwiper}
-          modules={[Navigation, Pagination]}
+          modules={[Navigation, Pagination, Autoplay]}
           navigation={{
             prevEl: `.swiper-button-prev-${door.id}`,
             nextEl: `.swiper-button-next-${door.id}`,
@@ -110,82 +144,103 @@ export default function ProductCard({ door }: ProductCardProps) {
           pagination={{
             el: `.swiper-pagination-${door.id}`,
             clickable: true,
-            bulletClass: 'swiper-pagination-bullet',
-            bulletActiveClass: 'swiper-pagination-bullet-active',
+            bulletClass: 'swiper-pagination-bullet-custom',
+            bulletActiveClass: 'swiper-pagination-bullet-active-custom',
+            renderBullet: (index, className) => {
+              return `<span class="${className}" data-index="${index}"></span>`
+            }
           }}
+          autoplay={isHovered ? {
+            delay: 3000,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          } : false}
           spaceBetween={0}
           slidesPerView={1}
-          className="w-full h-full"
+          speed={600}
+          onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex)}
+          className="w-full h-full rounded-t-2xl"
         >
           {currentImages.map((image, index) => (
-            <SwiperSlide key={index}>
-              <Link href={`/products/${door.slug}`}>
-                <div className="relative w-full h-full">
+            <SwiperSlide key={`${selectedVariantIndex}-${index}`}>
+              <Link href={`/products/${door.slug}`} className="block w-full h-full">
+                <div className="relative w-full h-full group/image ">
                   <Image
                     src={`${BASE_URL}${image}`}
-                    alt={`${door.name} - Image ${index + 1}`}
+                    alt={`${door.name} - ${selectedVariant?.color.name || ''} - ${index + 1}`}
                     fill
-                    className="object-cover transition-transform duration-700"
+                    className="object-cover transition-all duration-700 max-[390px]:object-fit"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onLoad={() => setImageLoaded(true)}
+                    priority={index === 0}
                   />
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/5 transition-all duration-300" />
                 </div>
               </Link>
             </SwiperSlide>
           ))}
         </Swiper>
 
-        {/* Navigation Arrows - Always visible on mobile, hover on desktop */}
+        {/* Enhanced Navigation */}
         {currentImages.length > 1 && (
           <>
-            <button className={`swiper-button-prev-${door.id} absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:shadow-lg active:scale-95`}>
-              <ChevronLeft className="w-4 h-4 text-gray-700" />
+            <button 
+              className={`swiper-button-prev-${door.id} absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-110 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'} md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-x-0`}
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
-            <button className={`swiper-button-next-${door.id} absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:shadow-lg active:scale-95`}>
-              <ChevronRight className="w-4 h-4 text-gray-700" />
+            <button 
+              className={`swiper-button-next-${door.id} absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-110 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'} md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-x-0`}
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-700" />
             </button>
           </>
         )}
 
-        {/* Pagination Dots - Always visible */}
+        {/* Custom Pagination */}
         {currentImages.length > 1 && (
-          <div className={`swiper-pagination-${door.id} !bottom-3`} />
+          <div className={`swiper-pagination-${door.id} !bottom-4 flex justify-center gap-1.5`} />
         )}
+    
 
-
-
-        {/* Category Badge */}
-        <div className="absolute top-3 left-3 z-10">
-          <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium">
-            {door.category}
-          </Badge>
-        </div>
-
-        {/* Image Counter - Always visible when multiple images */}
+        {/* Image Counter */}
         {currentImages.length > 1 && (
-          <div className="absolute bottom-3 left-3 z-10 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
+          <div className="absolute bottom-4 left-4 z-20 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5">
             <span className="text-white text-xs font-medium">
-              1/{currentImages.length}
+              {currentSlide + 1} / {currentImages.length}
             </span>
           </div>
         )}
       </div>
       
-      <CardContent className="p-4 sm:p-6">
-        <Link href={`/products/${door.slug}`}>
-          <h3 className="font-bold text-base sm:text-xl mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 text-gray-900">
+      <CardContent className="p-3 sm:p-4 space-y-3">
+        <Link href={`/products/${door.slug}`} className="block">
+          <h3 className="font-bold text-lg sm:text-xl mb-2 group-hover:text-blue-600 transition-colors line-clamp-2 text-gray-900 leading-tight">
             {door.name}
           </h3>
-          <p className="text-gray-600 text-sm sm:text-base line-clamp-3 mb-4 leading-relaxed">
+          <p className="text-gray-600 text-sm sm:text-base line-clamp-2 mb-4 leading-relaxed">
             {door.description}
           </p>
         </Link>
         
-        {/* Color Variants */}
+        {/* Enhanced Color Variants */}
         {door.variants.length > 0 && (
-          <div className="space-y-4">
-            {/* Color Options */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-4">
+          <div className="space-y-3">
+            {/* Color Options with Labels */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  Rəng: <span className="text-gray-900">{selectedVariant?.color.name}</span>
+                </span>
+                <span className="text-xs text-gray-500 hidden sm:inline-block">
+                  {door.variants.length} variant
+                </span>
+              </div>
+              
+              <div className="flex gap-3">
                 {door.variants.map((variant, index) => (
                   <button
                     key={variant.id}
@@ -193,46 +248,78 @@ export default function ProductCard({ door }: ProductCardProps) {
                       e.preventDefault()
                       handleColorSelect(index)
                     }}
-                    className={`relative w-6 h-6 sm:w-10 sm:h-10 rounded-full transition-all duration-300 overflow-hidden ${
+                    className={`relative group/color transition-all duration-300 ${
                       selectedVariantIndex === index 
-                        ? "ring-2 ring-blue-500 ring-offset-2 scale-110" 
-                        : "ring-2 ring-gray-200 hover:ring-gray-300 hover:scale-105"
+                        ? "scale-110" 
+                        : "hover:scale-105"
                     }`}
                     title={variant.color.name}
+                    aria-label={`Select color: ${variant.color.name}`}
                   >
-                    <Image
-                      src={`${BASE_URL}${variant.color.image}`}
-                      alt={variant.color.name}
-                      fill
-                      className="object-cover"
-                    />
+                    {/* Color swatch */}
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden transition-all duration-300 ${
+                      selectedVariantIndex === index 
+                        ? "ring-2 ring-blue-500 ring-offset-2 shadow-lg" 
+                        : "ring-2 ring-gray-200 group-hover/color:ring-gray-300 shadow-sm"
+                    }`}>
+                      <Image
+                        src={`${BASE_URL}${variant.color.image}`}
+                        alt={variant.color.name}
+                        width={40}
+                        height={40}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    
+                    {/* Selection indicator */}
+                    {selectedVariantIndex === index && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
             
-            {/* Price */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-              <span className="text-sm text-gray-600">Qiymət:</span>
-              <span className="text-xs sm:text-2xl font-bold text-blue-600">
-                {selectedVariant?.price} AZN
-              </span>
+            {/* Enhanced Price Section */}
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex flex-col">
+                <span className="text-sm text-gray-500 mb-1">Qiymət</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">
+                    {formatPrice(selectedVariant?.price || '0')}
+                  </span>
+                  <span className="text-sm font-medium text-gray-600">AZN</span>
+                </div>
+              </div>
+              
+             
             </div>
           </div>
         )}
       </CardContent>
 
       <style jsx global>{`
-        .swiper-pagination-bullet {
-          background: rgba(255, 255, 255, 0.7);
+        .swiper-pagination-bullet-custom {
+          background: rgba(255, 255, 255, 0.6);
           opacity: 1;
           width: 8px;
           height: 8px;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+          cursor: pointer;
         }
         
-        .swiper-pagination-bullet-active {
+        .swiper-pagination-bullet-active-custom {
           background: white;
-          transform: scale(1.2);
+          transform: scale(1.3);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .swiper-pagination-bullet-custom:hover {
+          background: rgba(255, 255, 255, 0.9);
+          transform: scale(1.1);
         }
       `}</style>
     </Card>
