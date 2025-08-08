@@ -65,6 +65,11 @@ export interface GeneralInfo {
   instagram_link: string
   phone: string
   wp: string
+  location: string
+  location_title_az: string
+  location_title_ru: string
+  about_az: string
+  about_ru: string
   hero_image: string
   hero_title_az: string
   hero_title_ru: string

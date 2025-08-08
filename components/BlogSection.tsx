@@ -1,13 +1,14 @@
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, Eye } from "lucide-react"
-import { fetchBlogs, type Blog } from "@/lib/api"
 import { BlogHeader } from "./home/BlogHeader"
 import { BlogButton } from "./home/BlogButton"
 import ViewAllButton from "./home/ViewAllButton"
 import P from "./home/p"
 
-export default function BlogSection({ blogs }: { blogs?: Blog[] }) {
+export default function BlogSection({ blogs }: { blogs?: any }) {
+
+  blogs = blogs?.length <= 3 ? blogs : blogs.slice(0, 3);
 
   if (!blogs) {
     return (
@@ -31,12 +32,12 @@ export default function BlogSection({ blogs }: { blogs?: Blog[] }) {
   }
 
   return (
-    <section className="py-16">
+    <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <BlogHeader />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {blogs.map((blog, index) => (
+          {blogs.map((blog: any, index: number) => (
             <Card key={blog.id} className="group hover:shadow-lg transition-all duration-300">
               <div className="aspect-video overflow-hidden">
                 <Image

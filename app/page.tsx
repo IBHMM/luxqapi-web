@@ -4,6 +4,7 @@ import BlogSection from "@/components/BlogSection"
 import { fetchGeneralInfo } from "@/lib/api";
 import { fetchDoorCategories, type DoorCategory } from "@/lib/api"
 import { fetchBlogs, type Blog } from "@/lib/api"
+import { Location } from "@/components/Location";
 
 
 export default async function HomePage() {
@@ -16,6 +17,7 @@ export default async function HomePage() {
     <div>
       <HeroSection generalInfo={generalInfo} />
       <CategoryGrid categories={categoryData} />
+      <Location generalInfo={generalInfo} />
       <BlogSection blogs={blogs.results} />
     </div>
   )
