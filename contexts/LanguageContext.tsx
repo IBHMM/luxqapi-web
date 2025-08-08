@@ -45,6 +45,9 @@ const translations = {
     page: "Səhifə",
     of: "dan",
     views: "baxış",
+    "footer-description": "Premium yaşayış və ticarət qaraj qapılarının çatdırılması",
+    "footer-legal": "© {year} Lux Qapi. Bütün hüquqlar qorunur.",
+    "footer-quick-links": "Sürətli keçidlər",
   },
   ru: {
     home: "Главная",
@@ -80,6 +83,9 @@ const translations = {
     page: "Страница",
     of: "из",
     views: "просмотров",
+    "footer-description": "Доставка премиум гаражных ворот для жилых и коммерческих объектов",
+    "footer-legal": "Lux Qapi. Все права защищены.",
+    "footer-quick-links": "Быстрые ссылки",
   },
 };
 

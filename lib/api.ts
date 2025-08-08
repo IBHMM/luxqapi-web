@@ -1,3 +1,4 @@
+
 export const API_BASE = "https://back.luxqapi.az/api"
 export const BASE_URL = "https://back.luxqapi.az"
 

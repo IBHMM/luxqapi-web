@@ -6,7 +6,7 @@ import { Phone, MessageCircle, Instagram } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function Footer() {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   return (
     <footer className="bg-gray-900 text-white pb-12">
@@ -17,12 +17,14 @@ export default function Footer() {
             <p className="text-2xl font-bold mb-4">
               LUX QAPI
             </p>
-            <p className="text-gray-300 mb-4 max-w-[350px]">Premium yaşayış və ticarət qaraj qapılarının çatdırılması</p>
+            <p className="text-gray-300 mb-4 max-w-[350px]">
+              {t("footer-description")}
+            </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Sürətli keçidlər</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("footer-quick-links")}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-gray-300 hover:text-white transition-colors">
@@ -63,7 +65,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400">© {new Date().getFullYear()} Əlçatan Lüks. Bütün hüquqlar qorunur.</p>
+          <p className="text-gray-400">© {new Date().getFullYear()} {t("footer-legal")}</p>
         </div>
       </div>
     </footer>

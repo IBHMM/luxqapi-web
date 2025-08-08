@@ -1,7 +1,6 @@
 import { type GeneralInfo } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { WazeButton } from "./home/Wazebutton";
+import { LocationTexts } from "./home/LocationTexts";
 
 export async function Location({ generalInfo }: { generalInfo?: GeneralInfo }) {
   if (!generalInfo) return null;
@@ -10,9 +9,6 @@ export async function Location({ generalInfo }: { generalInfo?: GeneralInfo }) {
   const latMatch = locationUrl.match(/3d([\d.]+)!4d([\d.]+)/);
   const lat = latMatch?.[1];
   const lng = latMatch?.[2];
-
-  // ✅ Use proper Waze URL format
-  const wazeUrl = lat && lng ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes` : "#";
 
   return (
     <section className="flex flex-col md:flex-row gap-6 items-stretch p-6 max-w-7xl mx-auto py-16">
@@ -30,13 +26,8 @@ export async function Location({ generalInfo }: { generalInfo?: GeneralInfo }) {
         )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center gap-10">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">
-            {generalInfo.location_title_az}
-          </h2>
-          <p className="text-gray-700 mb-4">{generalInfo.about_az}</p>
-        </div>
+      <div className="flex-1 flex flex-col justify-center gap-6">
+        <LocationTexts generalInfo={generalInfo} />
 
         <div>
           {lat && lng && <WazeButton lat={lat} lng={lng} />}

@@ -13,10 +13,7 @@ export function WazeButton({ lat, lng }: { lat: string; lng: string }) {
     const webLink = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
 
     if (isMobile) {
-      // Try to open Waze app
       window.location.href = deepLink;
-
-      // Fallback after delay
       setTimeout(() => {
         window.open(webLink, "_blank");
       }, 1500);
